@@ -8,7 +8,7 @@ File containing code relating to Computational Lab 3 of the Dynamics
 MPECDT core course.
 """
 
-def identity(x):
+def newfunction(x):
     """
     Function to compute the square of the input. If the input is 
     a numpy array, this returns a numpy array of all of the squared values.
@@ -18,12 +18,12 @@ def identity(x):
     outputs:
     y - a numpy array containing the square of all of the values
     """
-    return x
+    return np.exp(-10.0*x)*np.cos(x)
 
-def normal(N):
+def uniform(N):
     """
     Function to return a numpy array containing N samples from 
-    a N(0,1) distribution.
+    a uniform distribution.
     
     inputs:
     N - number of samples
@@ -31,22 +31,17 @@ def normal(N):
     outputs:
     X - the samples
     """
-    return np.random.randn(N)
+    return np.random.rand(N)
 
-def normal_pdf(x):
-    """
-    Function to evaluate the PDF for the normal distribution (the
-    normalisation coefficient is ignored). If the input is a numpy
-    array, this returns a numpy array with the PDF evaluated at each
-    of the values in the array.
 
-    inputs:
-    x - a numpy array of input values
+
+def sample_cluster(N):
+
+    u=uniform(N)
     
-    outputs:
-    rho - a numpy array of rho(x)
-    """
-    return np.exp(-x**2/2)
+    x=-0.1*np.log(1-u+u*np.exp(-10.0))
+
+    return x
 
 def uniform_pdf(x):
     """
@@ -64,6 +59,18 @@ def uniform_pdf(x):
     y[x<0] = 0.0
     y[x>1] = 0.0
     return y
+
+
+def cluster_pdf(x):
+    
+    "Function to evaluate the PDF for a function useful for the importance sampling that is more concentrated in zero than newfunction"
+    y = np.zeros(x.shape)
+    y = 10.0*np.exp(-10.0*x)/(1-np.exp(-10.0))
+    y[x<0] = 0.0
+    y[x>1] = 0.0
+
+    return y
+
 
 def importance(f, Y, rho, rhoprime, N):
     """
@@ -88,6 +95,8 @@ def importance(f, Y, rho, rhoprime, N):
 
 
     return theta
+
+
 if __name__ == '__main__':
     
     
@@ -95,10 +104,12 @@ if __name__ == '__main__':
      err=np.zeros(Ns.shape)
 
      for i,N in enumerate(Ns):
-	 theta = importance(identity,normal,
-                       uniform_pdf,normal_pdf,N)
-         err[i]=np.abs(0.5 - theta)
-         print err
+	 theta = importance(newfunction,sample_cluster,
+                       uniform_pdf,cluster_pdf,N)
+        
+         err[i]=np.abs(10.0/101.0-(10.0*np.cos(1.0)-np.sin(1.0))/(101.0*np.exp(10.0)) - theta)
+         "Comparing the analytic expected value with that produced by the importance sampling method increasing the number of samples N" 
+         
      pl.clf()
      pl.loglog(Ns, err,   'k',   label='error')
      pl.show()
